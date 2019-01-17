@@ -1,28 +1,49 @@
 #include <blind_controller.h>
 
-BlindController::BlindController(){
-    // default constructor
-}
+// Used for the definitions OUTPUT and INPUT
+#if ARDUINO >= 100
+    #include "Arduino.h"
+#else
+    #include "WProgram.h"
+#endif
+// If debugging, use this, else nothing
+// Remove these definitions to stop debug output
+//#define DEBUG_STEP 1 
+#define DEBUG 1
+// end definitions
+#ifdef DEBUG
+ #define debug(x)   Serial.print (x)
+ #define debugln(x) Serial.println (x)
+#else
+ #define debug(x)
+ #define debugln(x)
+#endif
 
-uint8_t BlindController::add_blind(uint8_t hb_1, uint8_t hb_2, uint8_t hall_top, uint8_t hall_bottom){
-    Blind b(m_blind_size, hb1, hb2, hall_top, hall_bottom);
-    (m_blinds+m_blind_size++) = *b;
+//BlindController::BlindController(){}
+
+bool BlindController::add_blind(uint8_t hb_1, uint8_t hb_2, uint8_t sensor){
+    if(m_blind_ptr > m_blinds_max_size){
+        return false;
+    }
+    Blind b(m_blind_ptr, hb_1, hb_2, sensor);
+    m_blinds[m_blind_ptr++] = b;
+    return true;
 }
 
 uint8_t BlindController::move_all_blinds(bool direction){
     uint8_t total = 0;
     
-    for(Blind* ptr = m_blinds; ptr < m_blinds+m_blind_size; ptr++ ){
-        total += move_blind(direction) ? 1 : 0;
+    for(int i = 0; i < m_blind_ptr; i++){
+        total += move_blind(m_blinds[i].get_ID(), direction) ? 1 : 0;
     }
 
     return total;
 }
 
-bool BlindController::move_blind(bool direction){
-    for(Blind* ptr = m_blinds; ptr < m_blinds+m_blind_size; ptr++ ){
-        if(ptr->get_ID() == id){
-            return ptr->operate_motor(direction);
+bool BlindController::move_blind(uint8_t id, bool direction){
+    for(int i = 0; i < m_blind_ptr; i++){
+        if(m_blinds[i].get_ID() == id){
+            return m_blinds[i].operate_motor(direction);
         }
     }
 }
@@ -30,49 +51,46 @@ bool BlindController::move_blind(bool direction){
 /* ~~~ Public functions ~~~ */
 
 uint8_t BlindController::close_all_blinds(){
-    move_all_blinds(false);
+    return move_all_blinds(false);
 }
 
 uint8_t BlindController::open_all_blinds(){  
-    move_all_blinds(true);
+    return move_all_blinds(true);
 }
 
 bool BlindController::close_blind(uint8_t id){
-    move_blind(false);
+    return move_blind(id, false);
 }
 
 bool BlindController::open_blind(uint8_t id){
-    move_blind(true);
+    return move_blind(id, true);
 }
 
 bool BlindController::is_open(uint8_t id){
-    for(Blind* ptr = m_blinds; ptr < m_blinds+m_blind_size; ptr++ ){
-        if(ptr->get_ID() == id){
-            return ptr->get_state() == 1;
+    for(int i = 0; i < m_blind_ptr; i++){
+        if(m_blinds[i].get_ID() == id){
+            return m_blinds[i].get_state() == 1;
         }
     }
+    return 0;
 }
 
 /* ~~~ Blind definitions ~~~ */
 /* --- Blind private functions --- */
 
-BlindController::Blind::Blind(){
-
-}
-
 uint8_t BlindController::Blind::get_state(){
-
+    return 0;
 }
 
-BlindController::Blind::operate_motor(bool dir){
-
+bool BlindController::Blind::operate_motor(bool dir){
+    return true;
 }
 
-BlindController::Blind::is_closed(){
-
+bool BlindController::Blind::is_closed(){
+    return true;
 }
 
-BlindController::Blind::is_open(){
-
+bool BlindController::Blind::is_open(){
+    return true;
 }
 

@@ -1,24 +1,39 @@
 #ifndef BLIND_CONTROLLER
 #define BLIND_CONTROLLER 1
 
+// Library used for correct bit memory allocations on specific machines
+#include <stdint.h>
+
+#define DEFAULT_MAX_BLINDS 10
+
 class BlindController{    
+
+    public: 
+
+        BlindController(){};
+        bool add_blind(uint8_t hb_1, uint8_t hb_2, uint8_t sensor);
+        uint8_t close_all_blinds();
+        uint8_t open_all_blinds();
+        bool close_blind(uint8_t id);
+        bool open_blind(uint8_t id);
+        bool is_open(uint8_t id);
 
     private:
 
-        bool move_blind(bool direction);
+        bool move_blind(uint8_t id, bool direction);
         uint8_t move_all_blinds(bool direction);
 
         class Blind{
 
             public:
 
-                Blind(uint8_t id, uint8_t hb_1, uint8_t hb_2, uint8_t hall_top, uint8_t hall_bottom){
+                Blind();
+                Blind(uint8_t id, uint8_t hb_1, uint8_t hb_2, uint8_t sensor){
                     m_id = id;
-                    m_hbridge_input_1 = hb1;
-                    m_hbridge_input_2 = hb2;
-                    m_hall_top = hall_top;
-                    m_hall_bottom = hall_bottom;
-                }
+                    m_hbridge_input_1 = hb_1;
+                    m_hbridge_input_2 = hb_2;
+                    m_sensor = sensor;
+                };
                 
                 uint8_t get_ID(){return m_id;}
                 uint8_t get_state();
@@ -28,29 +43,20 @@ class BlindController{
 
             private:
 
-                void check_sensors();
+                void check_sensors(){}
 
                 bool m_moving;
                 uint8_t m_id;
                 /* pins for driver and sensors */
                 uint8_t m_hbridge_input_1;
                 uint8_t m_hbridge_input_2;
-                uint8_t m_hall_top;
-                uint8_t m_hall_bottom;
+                uint8_t m_sensor;
 
         };
     
-        Blind*  m_blinds;
-        uint8_t m_blind_size;
-
-    public: 
-
-        uint8_t add_blind(uint8_t hb_1, uint8_t hb_2, uint8_t hall_top, uint8_t hall_bottom);
-        uint8_t close_all_blinds();
-        uint8_t open_all_blinds();
-        bool close_blind(uint8_t id);
-        bool open_blind(uint8_t id);
-        bool is_open(uint8_t id);
+        Blind  m_blinds[DEFAULT_MAX_BLINDS];
+        uint8_t m_blind_ptr;
+        uint8_t m_blinds_max_size = DEFAULT_MAX_BLINDS;
 
 };
 
